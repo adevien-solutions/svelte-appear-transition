@@ -50,5 +50,9 @@
 	},
 	"svelte": "./dist/index.js",
 	"types": "./dist/index.d.ts",
-	"type": "module"
+	"type": "module",
+	"keywords": [
+		"svelte",
+		"transition"
+	]
 }

@@ -1,9 +1,12 @@
 import type { Action } from 'svelte/action';
-import type { TransitionSettings, TransitionStyling } from './types.js';
+import { CountedIntersectionObserver } from './observer.js';
+import type { TransitionSettings, TransitionStyling, TransitionThreshold } from './types.js';
 
-let observer: IntersectionObserver;
+const DEFAULT_DURATION = 500 as const;
+const DEFAULT_THRESHOLD = 0.25 as const;
+
+const observerMap = new Map<TransitionThreshold, CountedIntersectionObserver>();
 const transitionMap = new Map<HTMLElement, TransitionSettings>();
-const DEFAULT_DURATION = 500;
 
 function onObserverChange(entries: IntersectionObserverEntry[]) {
 	entries.forEach((entry) => {
@@ -42,29 +45,17 @@ function addStyling(node: HTMLElement, styling?: TransitionStyling) {
 	if (!styling) return;
 
 	if (typeof styling === 'string') {
-		styling && node.classList.add(...styling.split(' '));
+		node.classList.add(...styling.split(' '));
 	} else {
 		Object.assign(node.style, styling);
 	}
 }
 
-// function removeStyling(node: HTMLElement, styling?: TransitionStyling) {
-// 	if (!styling) return;
-
-// 	if (typeof styling === 'string') {
-// 		node.classList.remove(...styling.split(' '));
-// 	} else {
-// 		Object.keys(styling).forEach((key) => {
-// 			node.style.removeProperty(key);
-// 		});
-// 	}
-// }
-
-function getOrCreateObserver() {
+function getOrCreateObserver(threshold: number | number[]) {
+	let observer = observerMap.get(threshold);
 	if (!observer) {
-		observer = new IntersectionObserver(onObserverChange, {
-			threshold: 0.25
-		});
+		observer = new CountedIntersectionObserver(onObserverChange, { threshold });
+		observerMap.set(threshold, observer);
 	}
 	return observer;
 }
@@ -75,14 +66,33 @@ export const appear: Action<HTMLElement, TransitionSettings> = (
 ) => {
 	addStyling(node, transition.from);
 	transitionMap.set(node, transition);
-	getOrCreateObserver().observe(node);
+	let observer = getOrCreateObserver(transition.threshold ?? DEFAULT_THRESHOLD);
+	observer.observe(node);
 
 	return {
 		update(newTransition: TransitionSettings) {
 			transitionMap.set(node, newTransition);
+
+			if (newTransition.threshold !== transition.threshold) {
+				observer.unobserve(node);
+				if (observer.isEmpty()) {
+					observer.disconnect();
+					observerMap.delete(transition.threshold ?? DEFAULT_THRESHOLD);
+				}
+
+				observer = getOrCreateObserver(newTransition.threshold ?? DEFAULT_THRESHOLD);
+			}
+
+			transition = { ...newTransition };
 		},
 		destroy() {
-			getOrCreateObserver().unobserve(node);
+			observer.unobserve(node);
+
+			if (observer.isEmpty()) {
+				observer.disconnect();
+				observerMap.delete(transition.threshold ?? DEFAULT_THRESHOLD);
+			}
+
 			transitionMap.delete(node);
 		}
 	};

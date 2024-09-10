@@ -16,20 +16,20 @@ npm i -D svelte-appear-transition
 
 ```svelte
 <div
-	use:appear={{
-		from: {
-			opacity: '0',
-			transform: 'translateY(40px)',
-			transitionTimingFunction: 'ease-out'
-		},
-		to: {
-			opacity: '1',
-			transform: 'translateY(0)'
-		},
-		duration: 500
-	}}
+  use:appear={{
+    from: {
+      opacity: '0',
+      transform: 'translateY(40px)',
+      transitionTimingFunction: 'ease-out'
+    },
+    to: {
+      opacity: '1',
+      transform: 'translateY(0)'
+    },
+    duration: 500
+  }}
 >
-	...
+  ...
 </div>
 ```
 
@@ -37,15 +37,15 @@ Same transition, but using Tailwind to apply the default styles:
 
 ```svelte
 <div
-	class="opacity-0 translate-y-10 duration-500 ease-out"
-	use:appear={{
-		to: {
-			opacity: '1',
-			transform: 'translateY(0)'
-		}
-	}}
+  class="opacity-0 translate-y-10 duration-500 ease-out"
+  use:appear={{
+    to: {
+      opacity: '1',
+      transform: 'translateY(0)'
+    }
+  }}
 >
-	...
+  ...
 </div>
 ```
 
@@ -53,21 +53,21 @@ Same transition, but using Tailwind to apply the default styles:
 
 ```svelte
 {#each items as item, i}
-	<div
-		use:appear={{
-			from: {
-				transform: 'translateY(40px)',
-				transitionDelay: `${i * 100}ms`,
-				transitionTimingFunction: 'ease-out'
-			},
-			to: {
-				transform: 'translateY(0)'
-			},
-			duration: 500
-		}}
-	>
-		{item}
-	</div>
+  <div
+    use:appear={{
+      from: {
+        transform: 'translateY(40px)',
+        transitionDelay: `${i * 100}ms`,
+        transitionTimingFunction: 'ease-out'
+      },
+      to: {
+        transform: 'translateY(0)'
+      },
+      duration: 500
+    }}
+  >
+    {item}
+  </div>
 {/each}
 ```
 
@@ -94,11 +94,11 @@ The `detail` property of `TransitionEvent` has the following shape:
 
 ```typescript
 {
-	/** The element that triggered the transition. */
-	element: HTMLElement;
-	/** The settings that were passed to the action. */
-	transition: TransitionSettings;
-	/** The direction of the transition. */
-	direction: 'in' | 'out';
+  /** The element that triggered the transition. */
+  element: HTMLElement;
+  /** The settings that were passed to the action. */
+  transition: TransitionSettings;
+  /** The direction of the transition. */
+  direction: 'in' | 'out';
 }
 ```

@@ -7,8 +7,11 @@ export type TransitionDirection = 'to' | 'from';
 export type TransitionEventDirection = 'in' | 'out';
 
 export type TransitionEventDetail = {
+	/** The element that triggered the transition. */
 	element: HTMLElement;
+	/** The settings that were passed to the action. */
 	transition: TransitionSettings;
+	/** The direction of the transition. */
 	direction: TransitionEventDirection;
 };
 
@@ -16,9 +19,9 @@ export type TransitionEvent = CustomEvent<TransitionEventDetail>;
 
 export type TransitionAttributes = {
 	/** Fired by the `svelte-appear-transition` package right before a transition starts. */
-	'on:transitionstart': (event: TransitionEvent) => void;
+	'on:styletransitionstart': (event: TransitionEvent) => void;
 	/** Fired by the `svelte-appear-transition` package right after a transition ends. */
-	'on:transitionend': (event: TransitionEvent) => void;
+	'on:styletransitionend': (event: TransitionEvent) => void;
 };
 
 export type TransitionSettings = {
@@ -45,7 +48,7 @@ export type TransitionSettings = {
 			 */
 			from?: TransitionStyling;
 			/**
-			 * Whether to apply the transition in both directions.
+			 * Whether to apply the transition in both directions. Can be `true` only if `from` is defined.
 			 * @default false
 			 */
 			bothWays?: false;
@@ -56,9 +59,9 @@ export type TransitionSettings = {
 			 */
 			from: TransitionStyling;
 			/**
-			 * Whether to apply the transition in both directions.
+			 * Whether to apply the transition in both directions. Can be `true` only if `from` is defined.
 			 * @default false
 			 */
-			bothWays?: true;
+			bothWays?: boolean;
 	  }
 );

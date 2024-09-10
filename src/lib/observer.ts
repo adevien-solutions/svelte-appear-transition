@@ -1,5 +1,7 @@
-export class CountedIntersectionObserver extends IntersectionObserver {
+export class CountedIntersectionObserver {
+	private observer: IntersectionObserver;
 	private observedElements: Set<Element>;
+
 	get count() {
 		return this.observedElements.size;
 	}
@@ -8,22 +10,22 @@ export class CountedIntersectionObserver extends IntersectionObserver {
 		callback: IntersectionObserverCallback,
 		options?: IntersectionObserverInit | undefined
 	) {
-		super(callback, options);
+		this.observer = new IntersectionObserver(callback, options);
 		this.observedElements = new Set();
 	}
 
 	public observe(target: Element) {
-		super.observe(target);
+		this.observer.observe(target);
 		this.observedElements.add(target);
 	}
 
 	public unobserve(target: Element) {
-		super.unobserve(target);
+		this.observer.unobserve(target);
 		this.observedElements.delete(target);
 	}
 
 	public disconnect() {
-		super.disconnect();
+		this.observer.disconnect();
 		this.observedElements.clear();
 	}
 

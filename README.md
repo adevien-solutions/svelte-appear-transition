@@ -2,7 +2,7 @@
 
 # Svelte Appear Transition
 
-An easy to use Svelte action that transitions elements when they appear in the viewport.
+An easy to use and SSR friendly Svelte action that transitions elements when they appear in the viewport.
 
 ## Installation
 

@@ -1,44 +1,66 @@
-import type { Action } from 'svelte/action';
+import type { ActionReturn } from 'svelte/action';
 import { CountedIntersectionObserver } from './observer.js';
-import type { TransitionSettings, TransitionStyling, TransitionThreshold } from './types.js';
+import type {
+	TransitionAttributes,
+	TransitionDirection,
+	TransitionEvent,
+	TransitionSettings,
+	TransitionStyling,
+	TransitionThreshold
+} from './types.js';
 
 const DEFAULT_DURATION = 500 as const;
-const DEFAULT_THRESHOLD = 0.25 as const;
+const DEFAULT_THRESHOLD = 0.5 as const;
 
 const observerMap = new Map<TransitionThreshold, CountedIntersectionObserver>();
 const transitionMap = new Map<HTMLElement, TransitionSettings>();
 
 function onObserverChange(entries: IntersectionObserverEntry[]) {
 	entries.forEach((entry) => {
-		const node = entry.target as HTMLElement;
-		const transition = transitionMap.get(node);
+		const element = entry.target as HTMLElement;
+		const transition = transitionMap.get(element);
 		if (!transition) return;
 
 		if (entry.isIntersecting && transition.to) {
-			startTransition(node, transition, 'to');
+			startTransition(element, transition, 'to');
 		} else if (transition.bothWays && transition.from) {
-			startTransition(node, transition, 'from');
+			startTransition(element, transition, 'from');
 		}
 	});
 }
 
 function startTransition(
-	node: HTMLElement,
+	element: HTMLElement,
 	transition: TransitionSettings,
-	direction: 'from' | 'to'
+	direction: TransitionDirection
 ) {
-	const prevDurationStyle = getComputedStyle(node).transitionDuration;
+	const prevDurationStyle = getComputedStyle(element).transitionDuration;
 	const prevDurationValue = parseFloat(prevDurationStyle.slice(0, -1)) * 1000;
 	const currentDuration = (transition.duration || prevDurationValue) ?? DEFAULT_DURATION;
 	if (!prevDurationValue) {
-		node.style.transitionDuration = `${currentDuration}ms`;
+		element.style.transitionDuration = `${currentDuration}ms`;
 	}
 
-	addStyling(node, transition[direction]);
+	sendTransitionEvent('start', element, transition, direction);
+
+	addStyling(element, transition[direction]);
 
 	setTimeout(() => {
-		node.style.transitionDuration = prevDurationStyle;
+		element.style.transitionDuration = prevDurationStyle;
+		sendTransitionEvent('end', element, transition, direction);
 	}, currentDuration);
+}
+
+function sendTransitionEvent(
+	phase: 'start' | 'end',
+	element: HTMLElement,
+	transition: TransitionSettings,
+	direction: TransitionDirection
+) {
+	const event: TransitionEvent = new CustomEvent(`styletransition${phase}`, {
+		detail: { element, transition, direction: direction === 'to' ? 'in' : 'out' }
+	});
+	element.dispatchEvent(event);
 }
 
 function addStyling(node: HTMLElement, styling?: TransitionStyling) {
@@ -60,40 +82,41 @@ function getOrCreateObserver(threshold: number | number[]) {
 	return observer;
 }
 
-export const appear: Action<HTMLElement, TransitionSettings> = (
-	node: HTMLElement,
+function removeObservedElement(
+	observer: CountedIntersectionObserver,
+	element: HTMLElement,
+	threshold?: TransitionThreshold
+) {
+	observer.unobserve(element);
+	if (observer.isEmpty()) {
+		observer.disconnect();
+		observerMap.delete(threshold ?? DEFAULT_THRESHOLD);
+	}
+}
+
+export const appear = (
+	element: HTMLElement,
 	transition: TransitionSettings
-) => {
-	addStyling(node, transition.from);
-	transitionMap.set(node, transition);
+): ActionReturn<TransitionSettings, TransitionAttributes> => {
+	addStyling(element, transition.from);
+	transitionMap.set(element, transition);
 	let observer = getOrCreateObserver(transition.threshold ?? DEFAULT_THRESHOLD);
-	observer.observe(node);
+	observer.observe(element);
 
 	return {
-		update(newTransition: TransitionSettings) {
-			transitionMap.set(node, newTransition);
+		update: (newTransition) => {
+			transitionMap.set(element, newTransition);
 
 			if (newTransition.threshold !== transition.threshold) {
-				observer.unobserve(node);
-				if (observer.isEmpty()) {
-					observer.disconnect();
-					observerMap.delete(transition.threshold ?? DEFAULT_THRESHOLD);
-				}
-
+				removeObservedElement(observer, element, transition.threshold);
 				observer = getOrCreateObserver(newTransition.threshold ?? DEFAULT_THRESHOLD);
 			}
 
 			transition = { ...newTransition };
 		},
-		destroy() {
-			observer.unobserve(node);
-
-			if (observer.isEmpty()) {
-				observer.disconnect();
-				observerMap.delete(transition.threshold ?? DEFAULT_THRESHOLD);
-			}
-
-			transitionMap.delete(node);
+		destroy: () => {
+			removeObservedElement(observer, element, transition.threshold);
+			transitionMap.delete(element);
 		}
 	};
 };

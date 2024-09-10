@@ -50,6 +50,8 @@
 	</div>
 	<div
 		class="box wide"
+		on:styletransitionstart={({ detail }) => console.log(detail)}
+		on:styletransitionend={({ detail }) => console.log(detail)}
 		use:appear={{
 			from: {
 				opacity: '0',

@@ -94,10 +94,10 @@ function removeObservedElement(
 	}
 }
 
-export const appear = (
+export function appear(
 	element: HTMLElement,
 	transition: TransitionSettings
-): ActionReturn<TransitionSettings, TransitionAttributes> => {
+): ActionReturn<TransitionSettings, TransitionAttributes> {
 	addStyling(element, transition.from);
 	transitionMap.set(element, transition);
 	let observer = getOrCreateObserver(transition.threshold ?? DEFAULT_THRESHOLD);
@@ -119,4 +119,4 @@ export const appear = (
 			transitionMap.delete(element);
 		}
 	};
-};
+}

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	// @ts-ignore
 	import { appear } from '$lib/actions';
 </script>

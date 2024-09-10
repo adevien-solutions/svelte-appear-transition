@@ -19,9 +19,9 @@ export type TransitionEvent = CustomEvent<TransitionEventDetail>;
 
 export type TransitionAttributes = {
 	/** Fired by the `svelte-appear-transition` package right before a transition starts. */
-	'on:styletransitionstart': (event: TransitionEvent) => void;
+	'on:styletransitionstart'?: (event: TransitionEvent) => void;
 	/** Fired by the `svelte-appear-transition` package right after a transition ends. */
-	'on:styletransitionend': (event: TransitionEvent) => void;
+	'on:styletransitionend'?: (event: TransitionEvent) => void;
 };
 
 export type TransitionSettings = {
